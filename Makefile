@@ -14,3 +14,4 @@ clean:
 	@find ./src -name "*.js" -type f
 	@find ./src -name "*.js" -type f -delete
 	@rm main.js
+	@rm config.js
