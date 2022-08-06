@@ -1,3 +1,11 @@
+/**
+ * TODO:
+ *      Make config file (config.ts), use exports to store settings (like dwm)
+ *      When backing up mods, make a local repo where they can be restored / installed from. (mark as local in modpack menu)
+ *          Mark official repos too, allow config to pull from multiple repos
+ *      
+ */
+
 let keypress = require('keypress');
 import * as fs from "fs";
 import * as path from "path";
