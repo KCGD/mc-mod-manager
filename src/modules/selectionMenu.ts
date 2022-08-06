@@ -56,8 +56,8 @@ export function createMenu(menu:string[], onSelection:onSelectionInterface, onCa
             if(i === currentSelection){
                 selectionChar = "*";
             }
-            console.log(`\t[${selectionChar}] ${menu[i]}`);
+            console.log(`[${selectionChar}] ${menu[i]}`);
         }
-        console.log(`\tmore...`);
+        console.log(`more...`);
     }
 }
