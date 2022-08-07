@@ -1,14 +1,22 @@
 interface onSelectionInterface {
-    (selection:string): void;
+    (selection:menuObject): void;
 }
 interface onCancelInterface {
     (): void;
 }
 
+//setup menuObject type
+export type menuObject = {
+    "path":string,
+    "type": "remote" | "local",
+    "version":string,
+    "name":string
+}
+
 //create menu function: menu (string[]), on selection function (selection), on cancel function, message, max items
-export function createMenu(menu:string[], onSelection:onSelectionInterface, onCancel:onCancelInterface, message:string|undefined, maxRenderedItems:number) {
+export function createMenu(menu:menuObject[], onSelection:onSelectionInterface, onCancel:onCancelInterface, message:string|undefined, maxRenderedItems:number) {
     //set up menu
-    let currentSelection=0;
+    let currentSelection:number=0;
     let renderOffset = 0;
     renderMenu();
     process.stdin.on('keypress', keyPressHandler);
@@ -56,7 +64,7 @@ export function createMenu(menu:string[], onSelection:onSelectionInterface, onCa
             if(i === currentSelection){
                 selectionChar = "*";
             }
-            console.log(`[${selectionChar}] ${menu[i]}`);
+            console.log(`[${selectionChar}] ${menu[i].name}`);
         }
         console.log(`more...`);
     }
