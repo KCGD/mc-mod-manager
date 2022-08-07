@@ -1,3 +1,5 @@
+import * as columnify from "columnify";
+
 interface onSelectionInterface {
     (selection:menuObject): void;
 }
@@ -11,6 +13,14 @@ export type menuObject = {
     "type": "remote" | "local",
     "version":string,
     "name":string
+}
+
+//setup menu table
+type menuTable = {
+    "Selected:":string,
+    "Name:":string,
+    "Version:":string,
+    "Repo:":string
 }
 
 //create menu function: menu (string[]), on selection function (selection), on cancel function, message, max items
@@ -58,14 +68,28 @@ export function createMenu(menu:menuObject[], onSelection:onSelectionInterface, 
             console.log(message);
         }
         let renderedItemsCount = 0; //seperate counter for rendered items, i can be offset
+        let table:menuTable[] = []
         for(let i=renderOffset; i < menu.length && renderedItemsCount < maxRenderedItems; i++) {
             renderedItemsCount++;
             let selectionChar = " ";
             if(i === currentSelection){
                 selectionChar = "*";
             }
-            console.log(`[${selectionChar}] ${menu[i].name}`);
+            //console.log(`[${selectionChar}] ${menu[i].name} on Minecraft ${menu[i].version} (${menu[i].type.toUpperCase()})`);
+            table.push({
+                "Selected:":`[${selectionChar}]`,
+                "Name:":menu[i].name,
+                "Version:":menu[i].version,
+                "Repo:":menu[i].type
+            })
         }
-        console.log(`more...`);
+        //cleanerTable(table);
+        console.log("");
+        console.log(columnify.default(table, 
+            {
+                columns:["Selected:", "Name:", "Version:", "Repo:"],
+                "minWidth":15
+            }));
+        console.log(`\nmore...`);
     }
 }
