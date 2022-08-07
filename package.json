@@ -26,6 +26,7 @@
   "bin": "main.js",
   "dependencies": {
     "@types/keypress": "^2.0.30",
+    "fs-extra": "^9.1.0",
     "keypress": "^0.2.1"
   }
 }
