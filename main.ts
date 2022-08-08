@@ -3,6 +3,12 @@
  *      Make config file (config.ts), use exports to store settings (like dwm)
  *      When backing up mods, make a local repo where they can be restored / installed from. (mark as local in modpack menu)
  *          Mark official repos too, allow config to pull from multiple repos
+ * 
+ *      How this will probably work:
+ *          The local repo support is good right now. Git and other remotes are non-existant
+ *          Download the config zip and the mod list from the git repo
+ *          Download the actual mod from curseforge using their API
+ *          Store the mods and unpacked config in the local repo    
  *      
  */
 
