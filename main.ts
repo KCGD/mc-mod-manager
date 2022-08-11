@@ -9,6 +9,9 @@
  *          Download the config zip and the mod list from the git repo
  *          Download the actual mod from curseforge using their API
  *          Store the mods and unpacked config in the local repo    
+ * 
+ *      Other possible method (best current method)
+ *          DO host the mod repo on github, but have it give a link to where to download the mods zip from
  *      
  */
 
@@ -24,6 +27,7 @@ import { getLocalRepo } from "./src/modules/localModRepo";
 import type { RepoData } from "./src/modules/localModRepo";
 import { getAppdataPath } from "./src/modules/appdataPath";
 import { recurse } from "./src/modules/recursion";
+import { FuzzySearch } from "./src/modules/fuzzySearch";
 
 
 //create template for user argument parsing
@@ -86,10 +90,18 @@ function Main(): void {
     }
     //createBackupIfNeeded
     function createBackupIfNeeded(mcPath:string): void {
-        if(fs.existsSync(path.join(mcPath, "mods/"))) {
-            if(fs.readdirSync(path.join(mcPath, "mods/")).length > 0) {
+        if(fs.existsSync(path.join(mcPath, "mods"))) {
+            if(fs.readdirSync(path.join(mcPath, "mods")).length > 0) {
                 //mods present, ask to make backup, then select a modpack
-                getRepoInfo(path.join(mcPath, "modBackupRepo"), mcPath);
+                rl.question(`It looks like you already have some mods installed. Would you like to create a backup? [y/n]: `, function(answer:string): void {
+                    if(answer.toLocaleLowerCase() === "y") {
+                        BackupCurrentMods(mcPath);
+                    } else {
+                        console.log("ANS");
+                        console.log(answer);
+                        getRepoInfo(path.join(mcPath, "modBackupRepo"), mcPath);
+                    }
+                })
             } else {
                 //select a modpack
                 getRepoInfo(path.join(mcPath, "modBackupRepo"), mcPath);
@@ -99,6 +111,20 @@ function Main(): void {
             getRepoInfo(path.join(mcPath, "modBackupRepo"), mcPath);
         }
     }
+
+    //create backup of current mods and configs, add to local repo
+    function BackupCurrentMods(mcPath:string): void {
+        let modPath:string = path.join(mcPath, "mods");
+        let configPath:string = path.join(mcPath, "config");
+        let localRepo:string = path.join(mcPath, "modBackupRepo");
+        let modList:string[] = fs.readdirSync(modPath);
+        let configList:string[] = fs.readdirSync(configPath);
+        //index the correct configs according to the mods list (using fuzzy search)
+        for(var modIter = 0; modIter < modList.length; modIter++) {
+            console.log(FuzzySearch(configList, modList[modIter], config.SearchThreshhold, config.SearchSampleSize));
+        }
+    }
+
     //pull index from the repo (special case for local repo)
     function getRepoInfo(modRepoPath:string, mcPath:string): void {
         let menuItems:menuObject[] = [];
