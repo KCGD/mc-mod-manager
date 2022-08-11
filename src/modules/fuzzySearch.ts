@@ -1,4 +1,4 @@
-type FuzzySearchResult = {
+export type FuzzySearchResult = {
     "search":string,
     "contestant":string,
     "match":number,
