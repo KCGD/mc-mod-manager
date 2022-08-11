@@ -28,6 +28,8 @@ import type { RepoData } from "./src/modules/localModRepo";
 import { getAppdataPath } from "./src/modules/appdataPath";
 import { recurse } from "./src/modules/recursion";
 import { FuzzySearch } from "./src/modules/fuzzySearch";
+import type { FuzzySearchResult } from "./src/modules/fuzzySearch";
+import * as Zip from 'adm-zip';
 
 
 //create template for user argument parsing
@@ -114,15 +116,24 @@ function Main(): void {
 
     //create backup of current mods and configs, add to local repo
     function BackupCurrentMods(mcPath:string): void {
-        let modPath:string = path.join(mcPath, "mods");
-        let configPath:string = path.join(mcPath, "config");
-        let localRepo:string = path.join(mcPath, "modBackupRepo");
-        let modList:string[] = fs.readdirSync(modPath);
-        let configList:string[] = fs.readdirSync(configPath);
-        //index the correct configs according to the mods list (using fuzzy search)
-        for(var modIter = 0; modIter < modList.length; modIter++) {
-            console.log(FuzzySearch(configList, modList[modIter], config.SearchThreshhold, config.SearchSampleSize));
-        }
+        rl.question("What name would you like to assign to this backup?: ", function(backupName:string): void {
+            rl.question("What game version and client are your mods for? (eample: 1.19 Forge): ", function(backupVersion:string): void {
+                let modPath:string = path.join(mcPath, "mods");
+                let configPath:string = path.join(mcPath, "config");
+                let localRepo:string = path.join(mcPath, "modBackupRepo");
+                let modList:string[] = fs.readdirSync(modPath);
+                let configList:string[] = fs.readdirSync(configPath);
+                //define modpack backup path
+                let backupPath = path.join(localRepo, `${backupName} - ${backupVersion}`);
+                //index the correct configs according to the mods list (using fuzzy search)
+                //generates a list of files in the config folder to be added to the modpack zip
+                let configSearchResults:FuzzySearchResult[] = [];
+                for(var modIter = 0; modIter < modList.length; modIter++) {
+                    configSearchResults = configSearchResults.concat(FuzzySearch(configList, modList[modIter], config.SearchThreshhold, config.SearchSampleSize));
+                }
+                console.log(configSearchResults);
+            })
+        })
     }
 
     //pull index from the repo (special case for local repo)
