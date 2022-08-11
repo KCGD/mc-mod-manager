@@ -26,6 +26,7 @@
   },
   "bin": "main.js",
   "dependencies": {
+    "@types/adm-zip": "^0.5.0",
     "@types/keypress": "^2.0.30",
     "adm-zip": "^0.5.9",
     "columnify": "^1.6.0",
