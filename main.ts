@@ -29,7 +29,7 @@ import { getAppdataPath } from "./src/modules/appdataPath";
 import { recurse } from "./src/modules/recursion";
 import { FuzzySearch } from "./src/modules/fuzzySearch";
 import type { FuzzySearchResult } from "./src/modules/fuzzySearch";
-import * as Zip from 'adm-zip';
+import { ZipDir } from './src/modules/zipFiles';
 
 
 //create template for user argument parsing
@@ -48,7 +48,7 @@ process.stdin.setRawMode(true);
 process.stdin.resume();
 
 //store process arguments
-let args = {}
+let args = {};
 
 //main function
 Main();
@@ -99,8 +99,6 @@ function Main(): void {
                     if(answer.toLocaleLowerCase() === "y") {
                         BackupCurrentMods(mcPath);
                     } else {
-                        console.log("ANS");
-                        console.log(answer);
                         getRepoInfo(path.join(mcPath, "modBackupRepo"), mcPath);
                     }
                 })
@@ -123,7 +121,6 @@ function Main(): void {
                 let localRepo:string = path.join(mcPath, "modBackupRepo");
                 let modList:string[] = fs.readdirSync(modPath);
                 let configList:string[] = fs.readdirSync(configPath);
-                //define modpack backup path
                 let backupPath = path.join(localRepo, `${backupName} - ${backupVersion}`);
                 //index the correct configs according to the mods list (using fuzzy search)
                 //generates a list of files in the config folder to be added to the modpack zip
@@ -131,7 +128,27 @@ function Main(): void {
                 for(var modIter = 0; modIter < modList.length; modIter++) {
                     configSearchResults = configSearchResults.concat(FuzzySearch(configList, modList[modIter], config.SearchThreshhold, config.SearchSampleSize));
                 }
-                console.log(configSearchResults);
+                let currentBackupPath:string = path.join(localRepo, `${backupName} - ${backupVersion}`);
+                fs.mkdirSync(currentBackupPath);
+                console.log("Compressing configs...");
+                ZipDir(configPath, configSearchResults.map(function(item): string {return item.contestant}), path.join(currentBackupPath, "configs.zip"), function(): void {
+                    console.log("Compressing mods (this may take a while)...");
+                    ZipDir(modPath, modList, path.join(currentBackupPath, "mods.zip"), function(): void {
+                        console.log("Writing info...");
+                        fs.writeFileSync(path.join(currentBackupPath, "info"), fs.readFileSync(path.join(__dirname, "src/assets/templates/modPackInfo/info")).toString()
+                            .replace('{version}', backupVersion)
+                            .replace("{name}", backupName)
+                        )
+                        fs.copyFileSync(path.join(__dirname, "src/assets/templates/modPackInfo/info.defaults.json"), path.join(currentBackupPath, "info.defaults.json"));
+                        rl.question("Backup created - no issues reported. Proceed to modpack installer menu? [y/n]: ", function(answer:string): void {
+                            if(answer.toLowerCase() === "y") {
+                                getRepoInfo(path.join(mcPath, "modBackupRepo"), mcPath);
+                            } else {
+                                process.exit(0);
+                            }
+                        })
+                    })
+                });
             })
         })
     }
