@@ -10,9 +10,10 @@ interface onCancelInterface {
 //setup menuObject type
 export type menuObject = {
     "path":string,
-    "type": "remote" | "local",
+    "type": string,
     "version":string,
-    "name":string
+    "name":string,
+    "local":boolean
 }
 
 //setup menu table
@@ -20,7 +21,8 @@ type menuTable = {
     "Selected:":string,
     "Name:":string,
     "Version:":string,
-    "Repo:":string
+    "Repo:":string,
+    "Local:":string
 }
 
 //create menu function: menu (string[]), on selection function (selection), on cancel function, message, max items
@@ -80,15 +82,16 @@ export function createMenu(menu:menuObject[], onSelection:onSelectionInterface, 
                 "Selected:":`[${selectionChar}]`,
                 "Name:":menu[i].name,
                 "Version:":menu[i].version,
-                "Repo:":menu[i].type
+                "Repo:":menu[i].type,
+                "Local:":menu[i].local.toString()
             })
         }
         //cleanerTable(table);
         console.log("");
         console.log(columnify.default(table, 
             {
-                columns:["Selected:", "Name:", "Version:", "Repo:"],
-                "minWidth":15
+                columns:["Selected:", "Name:", "Version:", "Repo:", "Local:"],
+                "minWidth":17
             }));
         console.log(`\nmore...`);
     }
