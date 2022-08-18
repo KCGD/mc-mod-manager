@@ -30,6 +30,7 @@ import { recurse } from "./src/modules/recursion";
 import { FuzzySearch } from "./src/modules/fuzzySearch";
 import type { FuzzySearchResult } from "./src/modules/fuzzySearch";
 import { ZipDir } from './src/modules/zipFiles';
+import { getRemoteRepo } from './src/modules/remoteModRepo';
 
 
 //create template for user argument parsing
@@ -156,8 +157,8 @@ function Main(): void {
     //pull index from the repo (special case for local repo)
     function getRepoInfo(modRepoPath:string, mcPath:string): void {
         let menuItems:menuObject[] = [];
-        recurse(config.RepoList, function(repoType:string, next:Function) {
-            if(repoType === "local") {
+        recurse(config.RepoList, function(repo:string, next:Function) {
+            if(repo === "local") {
                 getLocalRepo(modRepoPath, function(repoData, error): void {
                     if(!error && repoData) {
                         //merge into menu list
@@ -166,7 +167,8 @@ function Main(): void {
                                 "path":path.join(modRepoPath, repoData[j].path),
                                 "type":"local",
                                 "version":repoData[j].version,
-                                "name":repoData[j].name
+                                "name":repoData[j].name,
+                                "local":true
                             })
                         }
                         next();
@@ -183,7 +185,22 @@ function Main(): void {
                 })
             } else {
                 //git repo
-                next();
+                getRemoteRepo(repo, function(response, error){
+                    if(error) {
+                        throw error;
+                    } else if(response) {
+                        for(var i = 0; i < response.length; i++) {
+                            menuItems.push({
+                                "local":false,
+                                "name":response[i].name,
+                                "version":response[i].version,
+                                "path":response[i].path,
+                                "type":response[i].reponame
+                            })
+                        }
+                        next();
+                    }
+                });
             }
         }, function() {
             selectModpack(mcPath, menuItems);
