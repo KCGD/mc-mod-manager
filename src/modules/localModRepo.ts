@@ -10,7 +10,8 @@ export type RepoData = {
     "version":string,
     "name":string,
     "error":string|undefined,
-    "path":string
+    "path":string,
+    "reponame":string
 }
 
 export function getLocalRepo(modRepoPath:string, callback:localRepoCallbackInterface): void {
@@ -24,7 +25,8 @@ export function getLocalRepo(modRepoPath:string, callback:localRepoCallbackInter
                         "version":parsed.VERSION,
                         "name":parsed.NAME,
                         "error":undefined,
-                        "path":currentModpack
+                        "path":currentModpack,
+                        "reponame":"local"
                     })
                     next();
                 })
