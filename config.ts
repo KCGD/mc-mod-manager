@@ -6,3 +6,4 @@ export const ParralelDownloads:number = 4;
 export const ForgeApiKey:string = "[key here]";
 export const SearchThreshhold:number = 0.5;
 export const SearchSampleSize:number = 1000;
+export const API_User_Agent:string = 'Mozilla/5.0';
