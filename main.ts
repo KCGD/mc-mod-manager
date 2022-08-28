@@ -31,6 +31,8 @@ import { FuzzySearch } from "./src/modules/fuzzySearch";
 import type { FuzzySearchResult } from "./src/modules/fuzzySearch";
 import { ZipDir } from './src/modules/zipFiles';
 import { getRemoteRepo } from './src/modules/remoteModRepo';
+import { fetchToFile, fetchToCallback } from "./src/modules/httpTools";
+import { renderBar } from "./src/modules/progressBar";
 
 
 //create template for user argument parsing
@@ -227,7 +229,9 @@ function Main(): void {
 function downloadRemoteRepo(mcPath:string, repo:menuObject): void {
     let localRepoPath:string = path.join(mcPath, "modBackupRepo", repo.name);
     fs.mkdirSync(localRepoPath);
-    
+    fetchToCallback(path.join(repo.path, "modArchiveLink"), function(data, error): void {
+        console.log(data.toString());
+    })
 }
 
 function installLocalRepo(mcPath:string, repoPath:string): void {
