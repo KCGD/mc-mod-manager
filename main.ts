@@ -157,6 +157,7 @@ function Main(): void {
     //pull index from the repo (special case for local repo)
     function getRepoInfo(modRepoPath:string, mcPath:string): void {
         let menuItems:menuObject[] = [];
+        console.log("Getting modpack info from repositories...");
         recurse(config.RepoList, function(repo:string, next:Function) {
             if(repo === "local") {
                 getLocalRepo(modRepoPath, function(repoData, error): void {
@@ -211,10 +212,24 @@ function Main(): void {
         console.log(menu);
         //test modpack function: Array.apply(null, Array(20)).map(function(x, i) {return `Modpack ${i}`})
         createMenu(menu, function(selection:menuObject): void {
-            console.log(selection);
+            if(selection.local) {
+                installLocalRepo(mcPath, selection.path);
+            } else {
+                downloadRemoteRepo(mcPath, selection);
+            }
         }, function(): void {
             console.log(`Menu canceled`);
         }, "Please select a modpack (use the up/down arrow to navigate, and return to select):",
         10);
     }
+}
+
+function downloadRemoteRepo(mcPath:string, repo:menuObject): void {
+    let localRepoPath:string = path.join(mcPath, "modBackupRepo", repo.name);
+    fs.mkdirSync(localRepoPath);
+    
+}
+
+function installLocalRepo(mcPath:string, repoPath:string): void {
+
 }

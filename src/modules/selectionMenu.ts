@@ -22,7 +22,7 @@ type menuTable = {
     "Name:":string,
     "Version:":string,
     "Repo:":string,
-    "Local:":string
+    "Installed:":string
 }
 
 //create menu function: menu (string[]), on selection function (selection), on cancel function, message, max items
@@ -83,14 +83,14 @@ export function createMenu(menu:menuObject[], onSelection:onSelectionInterface, 
                 "Name:":menu[i].name,
                 "Version:":menu[i].version,
                 "Repo:":menu[i].type,
-                "Local:":menu[i].local.toString()
+                "Installed:":menu[i].local.toString()
             })
         }
         //cleanerTable(table);
         console.log("");
         console.log(columnify.default(table, 
             {
-                columns:["Selected:", "Name:", "Version:", "Repo:", "Local:"],
+                columns:["Selected:", "Name:", "Version:", "Repo:", "Installed:"],
                 "minWidth":17
             }));
         console.log(`\nmore...`);

@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as _http from 'http';
 import * as _https from 'https';
 import * as config from "../../config";
@@ -9,6 +10,12 @@ let httpModules = {
 
 interface fetchToCallback {
     (data:Buffer, error:undefined|Error): void
+}
+interface fetchToFileProgress {
+    (progressPercent:number): void
+}
+interface fetchToFileDone {
+    (): void
 }
 
 type AcceptedHttpProtocol = 'http' | 'https';
@@ -36,6 +43,40 @@ export function fetchToCallback(address:string, callback:fetchToCallback): void 
         res.on('end', function(): void {
             callback(Buffer.concat(returnBuffer), undefined);
         })
+    })
+}
+
+//function for large http requests, uses fs.writeStream to write response to file, offers progress
+export function fetchToFile(address:string, outPath:string, progressCallback:fetchToFileProgress, finished:fetchToFileDone): void {
+    let url = new URL(address);
+    let protocol:AcceptedHttpProtocol = determineProtocol(url);
+    let http = httpModules[protocol];
+    let outStream:fs.WriteStream = fs.createWriteStream(outPath);
+    let bytesTotal:number = 0;
+    let bytesWritten:number = 0;
+    const HttpOptions:_http.RequestOptions = {
+        "host":url.hostname,
+        "hostname":url.hostname,
+        "path":url.pathname,
+        "protocol":url.protocol,
+        "headers": {'User-Agent': config.API_User_Agent}
+    }
+    http.get(HttpOptions, function(res: _http.IncomingMessage): void {
+        if(res.headers['content-length']) {
+            bytesTotal = parseInt(res.headers['content-length']);
+            res.on('data', function(data): void {
+                outStream.write(data);
+                bytesWritten += Buffer.from(data).length;
+                progressCallback(bytesWritten/bytesTotal);
+            })
+            res.on('end', function(): void {
+                outStream.close();
+                finished();
+            })
+        } else {
+            throw new Error("HTTP Request returned no content-length header");
+            process.exit(1);
+        }
     })
 }
 
