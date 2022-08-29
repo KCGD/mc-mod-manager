@@ -55,6 +55,7 @@ export function fetchToFile(address:string, outPath:string, progressCallback:fet
     let bytesTotal:number = 0;
     let bytesWritten:number = 0;
     const HttpOptions:_http.RequestOptions = {
+        "port":url.port,
         "host":url.hostname,
         "hostname":url.hostname,
         "path":url.pathname,
