@@ -1,10 +1,10 @@
 export function renderBar(templateString:string, percentCompleted:number): string {
     let barFlag:string = '{bar}';
-    let barLength:number = templateString.length - barFlag.length;
+    let barLength:number = process.stdout.columns - templateString.length;
     let bar = new Array<string>(barLength);
-    let splitSector = Math.round(barLength / percentCompleted);
+    let splitSector = Math.round(barLength * (percentCompleted/100));
     for(var i = 0; i < barLength; i++) {
-        bar[i] = (i > splitSector)? "#" : " ";
+        bar[i] = (i < splitSector)? "#" : " ";
     }
-    return templateString.replace(`{bar}`, bar.join(''));
+    return templateString.replace(barFlag, bar.join(''));
 }
