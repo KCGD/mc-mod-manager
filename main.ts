@@ -17,6 +17,7 @@
 
 let keypress = require('keypress');
 import * as fs from "fs";
+import * as fsExt from "fs-extra";
 import { tmpdir } from "os";
 import * as path from "path";
 import * as process from "process";
@@ -30,7 +31,7 @@ import { getAppdataPath } from "./src/modules/appdataPath";
 import { recurse } from "./src/modules/recursion";
 import { FuzzySearch } from "./src/modules/fuzzySearch";
 import type { FuzzySearchResult } from "./src/modules/fuzzySearch";
-import { ZipDir } from './src/modules/zipFiles';
+import { ZipDir, Unzip } from './src/modules/zipFiles';
 import { getRemoteRepo } from './src/modules/remoteModRepo';
 import { fetchToFile, fetchToCallback } from "./src/modules/httpTools";
 import { renderBar } from "./src/modules/progressBar";
@@ -132,6 +133,7 @@ function Main(): void {
                 for(var modIter = 0; modIter < modList.length; modIter++) {
                     configSearchResults = configSearchResults.concat(FuzzySearch(configList, modList[modIter], config.SearchThreshhold, config.SearchSampleSize));
                 }
+                console.log(configSearchResults);
                 let currentBackupPath:string = path.join(localRepo, `${backupName} - ${backupVersion}`);
                 fs.mkdirSync(currentBackupPath);
                 console.log("Compressing configs...");
@@ -179,7 +181,13 @@ function Main(): void {
                     } else {
                         switch(error) {
                             case "ERR_NO_REPO":
-                                throw new Error (error);
+                                //create repo and proceed to remote repos, this will prevent this error from firing again.
+                                fs.mkdirSync(path.join(mcPath, "modBackupRepo"));
+                                next();
+                            break;
+                            case "ERR_EMPTY_REPO":
+                                //this can be ignored, no local repos will be present in modpack search
+                                next();
                             break;
                             default:
                                 throw new Error(error);
@@ -246,8 +254,9 @@ function downloadRemoteRepo(mcPath:string, repo:menuObject): void {
                     fetchToFile(path.join(repo.path, "configs.zip"), path.join(localRepoPath, "configs.zip"), function(progressPercent:number): void {
                         let roundedPercent:number = Math.round(progressPercent*100);
                         process.stdout.cursorTo(0);
-                        process.stdout.write(renderBar(`Downloading mods [{bar}] - ${roundedPercent}%`, roundedPercent)); 
+                        process.stdout.write(renderBar(`Downloading configs [{bar}] - ${roundedPercent}%`, roundedPercent)); 
                     }, function(): void {
+                        console.log(""); //new line
                         installLocalRepo(mcPath, repo);
                     });
                 });
@@ -259,12 +268,43 @@ function downloadRemoteRepo(mcPath:string, repo:menuObject): void {
 function installLocalRepo(mcPath:string, repo:menuObject): void {
     let localRepoPath:string = path.join(mcPath, "modBackupRepo", repo.name);
     let tmpPath:string = path.join(tmpdir(), "mcModInstaller");
+    fs.mkdirSync(tmpPath);
     let modsPath:string = path.join(mcPath, "mods");
-    let configsPath:string = path.join(mcPath, "configs");
+    let configsPath:string = path.join(mcPath, "config");
+    let tmpConfigsPath:string = path.join(tmpPath, "config");
+    fs.mkdirSync(tmpConfigsPath);
     let modsList:string[] = fs.readdirSync(modsPath);
     //clear the mods folder
+    console.log("Unpacking mods...");
     for(var i=0; i < modsList.length; i++) {
         fs.unlinkSync(path.join(modsPath, modsList[i]));
     }
-    
+    Unzip(path.join(localRepoPath, "mods.zip"), modsPath, function(error): void {
+        if(error) {throw error};
+        //unpack configs into tmp
+        console.log("Unpacking configs...");
+        Unzip(path.join(localRepoPath, "configs.zip"), tmpConfigsPath, function(error): void {
+            if(error) {throw error};
+            let configList:string[] = fs.readdirSync(tmpConfigsPath);
+            //fuzzy search configs to find older / incorrect versions
+            let configSearchResults:FuzzySearchResult[] = [];
+            for(var modIter = 0; modIter < modsList.length; modIter++) {
+                configSearchResults = configSearchResults.concat(FuzzySearch(configList, modsList[modIter], config.SearchThreshhold, config.SearchSampleSize));
+            }
+            console.log("Removing old configs...");
+            for(var i = 0; i < configSearchResults.length; i++) {
+                try {
+                    fs.unlinkSync(path.join(configsPath, configSearchResults[i].contestant));
+                } catch (e) {
+                    //config files may or may not exist. this error can be ignored. 
+                }
+            }
+            console.log("Installing new configs...");
+            fsExt.copySync(tmpConfigsPath, configsPath);
+            console.log("Removing temporaries...");
+            fs.rmdirSync(tmpPath, { recursive: true });
+            console.log("Modpack installed - no issues reported.");
+            process.exit(0);
+        })
+    })
 }
