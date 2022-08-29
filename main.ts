@@ -17,6 +17,7 @@
 
 let keypress = require('keypress');
 import * as fs from "fs";
+import { tmpdir } from "os";
 import * as path from "path";
 import * as process from "process";
 import * as config from "./config";
@@ -215,7 +216,7 @@ function Main(): void {
         //test modpack function: Array.apply(null, Array(20)).map(function(x, i) {return `Modpack ${i}`})
         createMenu(menu, function(selection:menuObject): void {
             if(selection.local) {
-                installLocalRepo(mcPath, selection.path);
+                installLocalRepo(mcPath, selection);
             } else {
                 downloadRemoteRepo(mcPath, selection);
             }
@@ -229,11 +230,41 @@ function Main(): void {
 function downloadRemoteRepo(mcPath:string, repo:menuObject): void {
     let localRepoPath:string = path.join(mcPath, "modBackupRepo", repo.name);
     fs.mkdirSync(localRepoPath);
-    fetchToCallback(path.join(repo.path, "modArchiveLink"), function(data, error): void {
-        console.log(data.toString());
+    //download modpack files
+    console.log("Download modpack info...");
+    fetchToCallback(path.join(repo.path, "info"), function(data, error): void {
+        fs.writeFileSync(path.join(localRepoPath, "info"), data);
+        fetchToCallback(path.join(repo.path, "info.defaults.json"), function(data, error): void {
+            fs.writeFileSync(path.join(localRepoPath, "info.defaults.json"), data);
+            fetchToCallback(path.join(repo.path, "modArchiveLink"), function(data, error): void {
+                fetchToFile(data.toString(), path.join(localRepoPath, "mods.zip"), function(progressPercent:number): void {
+                    let roundedPercent:number = Math.round(progressPercent*100);
+                    process.stdout.cursorTo(0);
+                    process.stdout.write(renderBar(`Downloading mods [{bar}] - ${roundedPercent}%`, roundedPercent)); 
+                }, function(): void {
+                    console.log(""); //new line
+                    fetchToFile(path.join(repo.path, "configs.zip"), path.join(localRepoPath, "configs.zip"), function(progressPercent:number): void {
+                        let roundedPercent:number = Math.round(progressPercent*100);
+                        process.stdout.cursorTo(0);
+                        process.stdout.write(renderBar(`Downloading mods [{bar}] - ${roundedPercent}%`, roundedPercent)); 
+                    }, function(): void {
+                        installLocalRepo(mcPath, repo);
+                    });
+                });
+            })
+        })
     })
 }
 
-function installLocalRepo(mcPath:string, repoPath:string): void {
-
+function installLocalRepo(mcPath:string, repo:menuObject): void {
+    let localRepoPath:string = path.join(mcPath, "modBackupRepo", repo.name);
+    let tmpPath:string = path.join(tmpdir(), "mcModInstaller");
+    let modsPath:string = path.join(mcPath, "mods");
+    let configsPath:string = path.join(mcPath, "configs");
+    let modsList:string[] = fs.readdirSync(modsPath);
+    //clear the mods folder
+    for(var i=0; i < modsList.length; i++) {
+        fs.unlinkSync(path.join(modsPath, modsList[i]));
+    }
+    
 }
