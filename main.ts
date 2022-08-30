@@ -229,7 +229,8 @@ function Main(): void {
                 downloadRemoteRepo(mcPath, selection);
             }
         }, function(): void {
-            console.log(`Menu canceled`);
+            console.log(`Abort.`);
+            process.exit(0);
         }, "Please select a modpack (use the up/down arrow to navigate, and return to select):",
         10);
     }
