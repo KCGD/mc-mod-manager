@@ -63,6 +63,14 @@ export function fetchToFile(address:string, outPath:string, progressCallback:fet
         "headers": {'User-Agent': config.API_User_Agent}
     }
     http.get(HttpOptions, function(res: _http.IncomingMessage): void {
+        //recurse if response code is a redirector
+        if(res.statusCode === 301 || res.statusCode === 301) {
+            if(res.headers.location) {
+                fetchToFile(res.headers.location, outPath, progressCallback, finished);
+            } else {
+                throw new Error("HTTP Redirect returned no valid location");
+            }
+        }
         if(res.headers['content-length']) {
             bytesTotal = parseInt(res.headers['content-length']);
             res.on('data', function(data): void {
