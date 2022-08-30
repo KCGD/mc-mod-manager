@@ -30,11 +30,13 @@ export function createMenu(menu:menuObject[], onSelection:onSelectionInterface, 
     //set up menu
     let currentSelection:number=0;
     let renderOffset = 0;
+    let search:string = "";
     renderMenu();
     process.stdin.on('keypress', keyPressHandler);
     function keyPressHandler (char:any, key:any): void {
         //console.log(key.name);
-        switch(key.name) {
+        let keyName:string = (key.name)? key.name : char;
+        switch(keyName) {
             case "up":
                 if(currentSelection > 0) {
                     currentSelection--;
@@ -54,6 +56,14 @@ export function createMenu(menu:menuObject[], onSelection:onSelectionInterface, 
             case "escape":
                 process.stdin.removeListener('keypress', keyPressHandler);
                 onCancel();
+            break;
+            case "backspace":
+                search = search.substring(0, search.length-1);
+                renderMenu();
+            break;
+            default:
+                search = search.concat(char);
+                renderMenu();
             break;
         }
     }
@@ -78,13 +88,16 @@ export function createMenu(menu:menuObject[], onSelection:onSelectionInterface, 
                 selectionChar = "*";
             }
             //console.log(`[${selectionChar}] ${menu[i].name} on Minecraft ${menu[i].version} (${menu[i].type.toUpperCase()})`);
-            table.push({
-                "Selected:":`[${selectionChar}]`,
-                "Name:":menu[i].name,
-                "Version:":menu[i].version,
-                "Repo:":menu[i].type,
-                "Installed:":menu[i].local.toString()
-            })
+            if(menu[i].name?.includes(search)) {
+                table.push({
+                    "Selected:":`[${selectionChar}]`,
+                    "Name:":menu[i].name,
+                    "Version:":menu[i].version,
+                    "Repo:":menu[i].type,
+                    "Installed:":menu[i].local.toString()
+                })
+            }
+
         }
         //cleanerTable(table);
         console.log("");
@@ -93,6 +106,7 @@ export function createMenu(menu:menuObject[], onSelection:onSelectionInterface, 
                 columns:["Selected:", "Name:", "Version:", "Repo:", "Installed:"],
                 "minWidth":17
             }));
-        console.log(`\nmore...`);
+        console.log(`more...`);
+        console.log(`\nSearch: ${search}`);
     }
 }
