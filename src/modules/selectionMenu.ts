@@ -1,4 +1,5 @@
 import * as columnify from "columnify";
+import * as readline from "readline";
 
 interface onSelectionInterface {
     (selection:menuObject): void;
@@ -63,6 +64,7 @@ export function createMenu(menu:menuObject[], onSelection:onSelectionInterface, 
             break;
             default:
                 search = search.concat(char);
+                currentSelection = 0;
                 renderMenu();
             break;
         }
