@@ -17,24 +17,24 @@
 
 let keypress = require('keypress');
 import * as fs from "fs";
-import * as fsExt from "fs-extra";
-import { tmpdir } from "os";
+import { tmpdir, homedir } from "os";
 import * as path from "path";
+import * as fsExt from "fs-extra";
 import * as process from "process";
-import * as config from "./config";
 import * as readline from "readline";
+import * as config from "./config";
+import { recurse } from "./src/modules/recursion";
+import { renderBar } from "./src/modules/progressBar";
+import { ZipDir, Unzip } from './src/modules/zipFiles';
+import { FuzzySearch } from "./src/modules/fuzzySearch";
 import { createMenu } from "./src/modules/selectionMenu";
-import type { menuObject } from "./src/modules/selectionMenu";
 import { getLocalRepo } from "./src/modules/localModRepo";
 import type { RepoData } from "./src/modules/localModRepo";
 import { getAppdataPath } from "./src/modules/appdataPath";
-import { recurse } from "./src/modules/recursion";
-import { FuzzySearch } from "./src/modules/fuzzySearch";
-import type { FuzzySearchResult } from "./src/modules/fuzzySearch";
-import { ZipDir, Unzip } from './src/modules/zipFiles';
 import { getRemoteRepo } from './src/modules/remoteModRepo';
+import type { menuObject } from "./src/modules/selectionMenu";
+import type { FuzzySearchResult } from "./src/modules/fuzzySearch";
 import { fetchToFile, fetchToCallback } from "./src/modules/httpTools";
-import { renderBar } from "./src/modules/progressBar";
 
 
 //create template for user argument parsing
@@ -55,6 +55,20 @@ process.stdin.resume();
 //store process arguments
 let args = {};
 
+//setup and unpack config
+type globalConfig = {
+    "RepoList":string[],
+    "SearchThreshhold":number,
+    "SearchSampleSize":number,
+    "API_User_Agent":string,
+    "Use_Cached_Git_Response":boolean
+}
+let configPath:string = path.join(homedir(), ".config/mcModInstaller/config.ts");
+if(!fs.existsSync(path.dirname(configPath))) {
+    fs.mkdirSync(path.dirname(configPath), {"recursive": true});
+    fs.copyFileSync(path.join(__dirname, "src/assets/defaults/config.ts"), configPath);
+}
+
 //main function
 Main();
 function Main(): void {
@@ -69,10 +83,13 @@ function Main(): void {
                 console.log(fs.readFileSync(path.join(__dirname, "./src/HelpFile")).toString());
                 process.exit(0);
             break;
+            
+            default:
+                confirmAppdataPath(path.join(getAppdataPath(), ".minecraft/"));
+            break;
         }
     }
     //confirm appdata path
-    confirmAppdataPath(path.join(getAppdataPath(), ".minecraft/"));
     function confirmAppdataPath(mcPath:string): void {
         rl.question(`Minecraft is stored in "${mcPath}". Is this correct? [y/n]: `, function(answer:string): void {
             if(answer.toLowerCase().replace(/(\r\n|\n|\r)/gm, "") === "y") {

@@ -1,1 +1,11 @@
-help info goes here
+******************************
+*      mc mod installer      *
+******************************
+
+Here's how to use it:
+    [Arguments]
+        (no arguments)              Runs the installer normally
+        --addRepo [link to repo]    Adds a repository to the modpack menu
+        --listRepos                 Lists your current repositories
+        --removeRepo [repo number]  Remoes a repo from your menu
+                                    (get repo number from --listRepos command)
