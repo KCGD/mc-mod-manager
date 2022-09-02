@@ -15,7 +15,6 @@
  *      
  */
 
-let keypress = require('keypress');
 import * as fs from "fs";
 import { tmpdir, homedir } from "os";
 import * as path from "path";
@@ -48,7 +47,7 @@ const rl = readline.createInterface({
 })
 
 //setup stdin
-keypress(process.stdin);
+require('keypress')(process.stdin);
 process.stdin.setRawMode(true);
 process.stdin.resume();
 
@@ -150,7 +149,7 @@ function Main(): void {
                 for(var modIter = 0; modIter < modList.length; modIter++) {
                     configSearchResults = configSearchResults.concat(FuzzySearch(configList, modList[modIter], config.SearchThreshhold, config.SearchSampleSize));
                 }
-                console.log(configSearchResults);
+                //console.log(configSearchResults);
                 let currentBackupPath:string = path.join(localRepo, `${backupName} - ${backupVersion}`);
                 fs.mkdirSync(currentBackupPath);
                 console.log("Compressing configs...");
