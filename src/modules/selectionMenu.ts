@@ -65,6 +65,7 @@ export function createMenu(menu:menuObject[], onSelection:onSelectionInterface, 
             default:
                 search = search.concat(char);
                 currentSelection = 0;
+                renderOffset = 0;
                 renderMenu();
             break;
         }
